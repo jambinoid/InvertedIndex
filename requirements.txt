@@ -1,0 +1,4 @@
+dacite
+pymystem3
+psycopg2
+tqdm
