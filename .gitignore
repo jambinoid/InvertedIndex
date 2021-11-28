@@ -1,1 +1,4 @@
 __pycache__
+dist
+build
+inverted_index.egg-info
