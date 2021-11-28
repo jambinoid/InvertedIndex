@@ -7,10 +7,12 @@ from tqdm import tqdm
 
 
 class Tokenizer:
-    def __init__(self):
+    def __init__(self, use_stop_words: bool = False):
         self.stemmer = Mystem()
-        with open('stop_words.txt') as f:
-            self.stop_words = f.read().split('\n')
+        self.stop_words = []
+        if use_stop_words:
+            with open('stop_words.txt') as f:
+                self.stop_words = f.read().split('\n')
 
     def _chunkify(self, iterable: Iterable[Any], chunk_size: int):
         it = iter(iterable)
@@ -103,6 +105,7 @@ class Tokenizer:
         """
 
         inverted_index = {}
+        words_len = {}
         if progress:
             iterator = tqdm(texts.items())
         else:
@@ -117,8 +120,9 @@ class Tokenizer:
                         inverted_index[word][text_id] = 1
                 else:
                     inverted_index[word] = {text_id: 1}
+            words_len[text_id] = len(text)
         
-        return inverted_index
+        return inverted_index, words_len
 
 
 if __name__ == "__main__":
