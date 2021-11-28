@@ -208,7 +208,6 @@ class InvertedIndex:
             f"FROM {self.iindex_table} WHERE {self.iindex_term_col} = %s;"
 
         terms = self.tokenizer.lemmatize_step(query, self.clean)
-        print(terms)
 
         with self.connection.cursor() as cursor:
             cursor.execute(f"SELECT {self.dlens_docid_col}, {self.dlens_len_col} FROM {self.dlens_table};")
@@ -224,8 +223,6 @@ class InvertedIndex:
                     (term,)
                 )
                 df_ts[term] = cursor.fetchone()[0]
-            print(n_docs)
-            print(df_ts)
             
         top_heap = [(-math.inf, "url")] * top
         # Gotta iterate over many queries in parallel so use many cursors 
