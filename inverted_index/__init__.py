@@ -256,7 +256,6 @@ class InvertedIndex:
             )
             bm25_score = sum(
                 starmap(bm25_doc, ((tf_tds[term], df_ts[term]) for term in doc_terms)))
-            # print(bm25_score)
             # If doc is in current top25 then push it to heap
             if bm25_score > top_heap[0][0]:
                 heapq.heapreplace(top_heap, (bm25_score, lowest_docid))
