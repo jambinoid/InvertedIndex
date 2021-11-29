@@ -232,9 +232,10 @@ class InvertedIndex:
         cursors_states = dict()
         for term, cursor in cursors_dict.items():
             cursor.execute(query_pattern, (term,))
-            doc_id, tf_td = cursor.fetchone()
-            cursors_states[term] = doc_id
-            tf_tds[term] = tf_td
+            row = cursor.fetchone()
+            if row:
+                cursors_states[term] = row[0]  # doc_id
+                tf_tds[term] = row[1]  # tf_td
 
         # Perform top heap query search
         # Stop when no docs left in every cursor
