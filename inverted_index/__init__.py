@@ -261,7 +261,7 @@ class InvertedIndex:
                 heapq.heapreplace(top_heap, (bm25_score, lowest_docid))
             # Update state for cursors which had considered doc as their state   
             for term in doc_terms:
-                row = cursor.fetchone()
+                row = cursors_states[term].fetchone()
                 if row:
                     cursors_states[term] = row[0]  # doc_id
                     tf_tds[term] = row[1]  # tf_td
