@@ -273,4 +273,7 @@ class InvertedIndex:
             cursor.close()
         
         # Return sorted by scores list of top documents ids
-        return [doc_id for _, doc_id in sorted(top_heap, key=lambda x: x[0])]
+        return [
+            doc_id for _, doc_id in sorted(top_heap, key=lambda x: x[0])
+            if doc_id != 'url'
+        ]
