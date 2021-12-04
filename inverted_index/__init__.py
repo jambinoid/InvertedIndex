@@ -130,6 +130,25 @@ class InvertedIndex:
         
         """
         with self.connection.cursor() as cursor:
+            # Check if tables exists
+            cursor.execute(
+                 "SELECT EXISTS ("
+                 "   SELECT FROM information_schema.tables" 
+                f"   WHERE table_name = '{self.dlens_table}'"
+                 ");"
+            )
+            if cursor.fetchone()[0]:
+                raise Exception(f"Table {self.dlens_table} already exists")
+            # Check if table exists
+            cursor.execute(
+                 "SELECT EXISTS ("
+                 "   SELECT FROM information_schema.tables" 
+                f"   WHERE table_name = '{self.iindex_table}'"
+                 ");"
+            )
+            if cursor.fetchone()[0]:
+                raise Exception(f"Table {self.iindex_table} already exists")
+
             # Get parsed data from the database table
             print("Readig data")
             cursor.execute(f"SELECT {src_docid_col}, {src_doc_col} FROM {src_table};")
