@@ -27,7 +27,7 @@ def main(config: PostgresConfig):
         dlens_table=config.dlens_table,
         dlens_docid_col=config.dlens_docid_col,
         dlens_len_col=config.dlens_len_col,
-        clean=False
+        clean=True
     )
     iindex.create(
         src_table=config.src_table,
