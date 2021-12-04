@@ -3,7 +3,7 @@ from functools import partial
 import heapq
 from itertools import starmap
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import psycopg2
 from tqdm import tqdm
@@ -92,7 +92,7 @@ class InvertedIndex:
         texts: Dict[Any, str],
         clean: bool = True,
         progress: bool = True
-    ) -> Dict[str, Dict[Any, int]]:
+    ) -> Tuple(Dict[str, Dict[Any, int]], Dict[Any, int]):
         """
         Dummy creation of inverted index using dictionaries
         
@@ -155,11 +155,17 @@ class InvertedIndex:
             docs = cursor.fetchall()
             inverted_index, docs_lens = self._create_dict(
                 dict(docs), clean=self.clean)
+            # Get DocId datatype
+            cursor.execute(
+                 "SELECT data_type FROM information_schema.columns"
+                f"WHERE table_name = '{src_table}' AND column_name = '{src_docid_col}';"
+            )
+            docid_type = cursor.fetchone()
             # Create new table for docs lengths
             cursor.execute(
                 f"CREATE TABLE {self.dlens_table} (\n"
                  "    id                        bigserial PRIMARY KEY,\n"
-                f"    {self.dlens_docid_col}    text REFERENCES pages(url) ON DELETE CASCADE,\n"
+                f"    {self.dlens_docid_col}    {docid_type} REFERENCES {src_table}({src_docid_col}) ON DELETE CASCADE,\n"
                 f"    {self.dlens_len_col}      int\n"
                  ");"
             )
@@ -177,7 +183,7 @@ class InvertedIndex:
                 f"CREATE TABLE {self.iindex_table} (\n"
                  "    id                         bigserial PRIMARY KEY,\n"
                 f"    {self.iindex_term_col}     text,\n"
-                f"    {self.iindex_docid_col}    text REFERENCES pages(url) ON DELETE CASCADE,\n"
+                f"    {self.iindex_docid_col}    {docid_type} REFERENCES {src_table}({src_docid_col}) ON DELETE CASCADE,\n"
                 f"    {self.iindex_count_col}    smallint\n"
                  ");"
             )
