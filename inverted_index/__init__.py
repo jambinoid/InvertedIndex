@@ -137,7 +137,7 @@ class InvertedIndex:
                 f"   WHERE table_name = '{self.dlens_table}'"
                  ");"
             )
-            if cursor.fetchone()[0]:
+            if cursor.fetchone():
                 raise Exception(f"Table {self.dlens_table} already exists")
             # Check if table exists
             cursor.execute(
@@ -146,7 +146,7 @@ class InvertedIndex:
                 f"   WHERE table_name = '{self.iindex_table}'"
                  ");"
             )
-            if cursor.fetchone()[0]:
+            if cursor.fetchone():
                 raise Exception(f"Table {self.iindex_table} already exists")
 
             # Get parsed data from the database table
@@ -201,6 +201,40 @@ class InvertedIndex:
                     )
         # Commit changes
         self.connection.commit()
+
+    def remove(self, with_additional_tables: bool = True):
+        """
+        Remove inverted index from the Postgres
+        database
+        
+        """
+        with self.connection.cursor() as cursor:
+            # Check if table exists and remove
+            cursor.execute(
+                 "SELECT EXISTS ("
+                 "   SELECT FROM information_schema.tables" 
+                f"   WHERE table_name = '{self.iindex_table}'"
+                 ");"
+            )
+            if cursor.fetchone():
+                cursor.execute(f"DROP TABLE {self.iindex_table}")
+            else:
+                print(f"Table {self.iindex_table} do not exist, nothing to remove")
+            # Check if tables exists
+            if with_additional_tables:
+                cursor.execute(
+                    "SELECT EXISTS ("
+                    "   SELECT FROM information_schema.tables" 
+                    f"   WHERE table_name = '{self.dlens_table}'"
+                    ");"
+                )
+                if cursor.fetchone():
+                    cursor.execute(f"DROP TABLE {self.dlens_table}")
+                else:
+                    print(f"Table {self.dlens_table} do not exist, nothing to remove")
+        # Commit changes
+        self.connection.commit()
+        print("Tables are removed")
 
     @staticmethod
     def _bm25_term(
