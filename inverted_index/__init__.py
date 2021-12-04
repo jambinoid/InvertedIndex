@@ -3,7 +3,7 @@ from functools import partial
 import heapq
 from itertools import starmap
 import math
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import psycopg2
 from tqdm import tqdm
@@ -87,6 +87,37 @@ class InvertedIndex:
         self.connection.close()
         del self.tokenizer
 
+    def _create_dict(
+        self,
+        texts: Dict[Any, str],
+        clean: bool = True,
+        progress: bool = True
+    ) -> Dict[str, Dict[Any, int]]:
+        """
+        Dummy creation of inverted index using dictionaries
+        
+        """
+
+        inverted_index = {}
+        words_len = {}
+        if progress:
+            iterator = tqdm(texts.items())
+        else:
+            iterator = texts.items()
+
+        for text_id, text in iterator:
+            for word in self.tokenizer.lemmatize_step(text, clean):
+                if word in inverted_index.keys():
+                    if text_id in inverted_index[word].keys():
+                        inverted_index[word][text_id] += 1
+                    else:
+                        inverted_index[word][text_id] = 1
+                else:
+                    inverted_index[word] = {text_id: 1}
+            words_len[text_id] = len(text)
+        
+        return inverted_index, words_len
+
     def create(
         self,
         src_table: str,
@@ -103,7 +134,7 @@ class InvertedIndex:
             print("Readig data")
             cursor.execute(f"SELECT {src_docid_col}, {src_doc_col} FROM {src_table};")
             docs = cursor.fetchall()
-            inverted_index, docs_lens = self.tokenizer.create_inverted_index(
+            inverted_index, docs_lens = self._create_dict(
                 dict(docs), clean=self.clean)
             # Create new table for docs lengths
             cursor.execute(

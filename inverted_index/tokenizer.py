@@ -93,37 +93,6 @@ class Tokenizer:
 
         return batch_of_lemmas
 
-    def create_inverted_index(
-        self,
-        texts: Dict[Any, str],
-        clean: bool = True,
-        progress: bool = True
-    ) -> Dict[str, Dict[Any, int]]:
-        """
-        Dummy creation of inverted index using dictionaries
-        
-        """
-
-        inverted_index = {}
-        words_len = {}
-        if progress:
-            iterator = tqdm(texts.items())
-        else:
-            iterator = texts.items()
-
-        for text_id, text in iterator:
-            for word in self.lemmatize_step(text, clean):
-                if word in inverted_index.keys():
-                    if text_id in inverted_index[word].keys():
-                        inverted_index[word][text_id] += 1
-                    else:
-                        inverted_index[word][text_id] = 1
-                else:
-                    inverted_index[word] = {text_id: 1}
-            words_len[text_id] = len(text)
-        
-        return inverted_index, words_len
-
 
 if __name__ == "__main__":
     story = 'Парни рассказывали, как на демо заказчик нажал на какую-то кнопку, а там алерт выскочил "Куда жмёшь придурок".'\
