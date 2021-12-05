@@ -51,7 +51,9 @@ class PostgresConfig:
     src_doc_col: Optional[str] = field(
         default="parsed_data", init=False)
     encoding: Optional[str] = field(
-        default=None, init=False)
+        default=None, init=False),
+    search_col: Optional[str] = field(
+        default="url", init=False)
 
 
 class InvertedIndex:
@@ -69,6 +71,9 @@ class InvertedIndex:
         dlens_table: str,
         dlens_docid_col: str,
         dlens_len_col: str,
+        src_table: str,
+        src_docid_col: str,
+        src_doc_col: str,
         encoding: str = None,
         clean: bool = True
     ):
@@ -103,6 +108,10 @@ class InvertedIndex:
         self.dlens_table = dlens_table
         self.dlens_docid_col = dlens_docid_col
         self.dlens_len_col = dlens_len_col
+
+        self.src_table = src_table
+        self.src_docid_col = src_docid_col
+        self.src_doc_col = src_doc_col
 
         self.tokenizer = Tokenizer()
         self.clean = clean
@@ -147,23 +156,10 @@ class InvertedIndex:
         
         return inverted_index, words_len
 
-    def create(
-        self,
-        src_table: str,
-        src_docid_col: str,
-        src_doc_col: str
-    ):
+    def create(self):
         """
         Create inverted index and put in to the Postgres
         database
-        
-        Parameters:
-            src_table: str
-                Name of table with data in DB
-            src_docid_col: str,
-                Name of column with docIDs in table
-            src_doc_col: str,
-                Name of columns with docs in table
         
         """
 
@@ -189,14 +185,14 @@ class InvertedIndex:
 
             # Get parsed data from the database table
             print("Readig data")
-            cursor.execute(f"SELECT {src_docid_col}, {src_doc_col} FROM {src_table};")
+            cursor.execute(f"SELECT {self.src_docid_col}, {self.src_doc_col} FROM {self.src_table};")
             docs = cursor.fetchall()
             inverted_index, docs_lens = self._create_dict(
                 dict(docs), clean=self.clean)
             # Get DocID datatype
             cursor.execute(
                 "SELECT data_type FROM information_schema.columns\n"
-                f"WHERE table_name = '{src_table}' AND column_name = '{src_docid_col}';"
+                f"WHERE table_name = '{self.src_table}' AND column_name = '{self.src_docid_col}';"
             )
             docid_type = cursor.fetchone()[0]
             if self.encoding:
@@ -220,7 +216,7 @@ class InvertedIndex:
                 cursor.execute(
                     f"CREATE TABLE {self.dlens_table} (\n"
                      "    id                        bigserial PRIMARY KEY,\n"
-                    f"    {self.dlens_docid_col}    {docid_type} REFERENCES {src_table}({src_docid_col}) ON DELETE CASCADE,\n"
+                    f"    {self.dlens_docid_col}    {docid_type} REFERENCES {self.src_table}({self.src_docid_col}) ON DELETE CASCADE,\n"
                     f"    {self.dlens_len_col}      smallint\n"
                      ");"
                 )
@@ -257,7 +253,7 @@ class InvertedIndex:
                     f"CREATE TABLE {self.iindex_table} (\n"
                     "    id                         bigserial PRIMARY KEY,\n"
                     f"    {self.iindex_term_col}     text,\n"
-                    f"    {self.iindex_docid_col}    {docid_type} REFERENCES {src_table}({src_docid_col}) ON DELETE CASCADE,\n"
+                    f"    {self.iindex_docid_col}    {docid_type} REFERENCES {self.src_table}({self.src_docid_col}) ON DELETE CASCADE,\n"
                     f"    {self.iindex_count_col}    integer\n"
                     ");"
                 )
@@ -375,10 +371,27 @@ class InvertedIndex:
         query: str,
         top: int = 25,
         saturation_coeff: float = 5.,
-        len_coeff: float = .5
+        len_coeff: float = .5,
+        col_to_return: str = None
     ) -> List[Any]:
         """
-        Perform search
+        Perform search on inverted index
+
+        Parameters:
+            - query: str
+                Text query
+            - top: int
+                Number of top results of a query [default = 25]
+            - saturation_coeff: float
+                Saturation coefficient [default = .5]
+            - len_coeff: float
+                Text length coefficient [default = .5]
+            - col_to_return: str
+                Column of DB to return in result.
+                If None [default] return list of docIDs
+
+        Returns:
+            List of top documents for given query
         
         """
 
@@ -467,8 +480,16 @@ class InvertedIndex:
         for cursor in cursors_dict.values():
             cursor.close()
         
-        # Return sorted by scores list of top documents ids
-        return [
+        # Get sorted by scores list of top documents ids
+        top_heap = [
             doc_id for _, doc_id in sorted(top_heap, key=lambda x: x[0])
             if doc_id != 'url'
         ]
+        if col_to_return:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    f"SELECT {col_to_return} FROM {self.src_table}\n"
+                    f"WHERE {self.src_docid_col} IN {tuple(top_heap)};"
+                )
+                return list(*zip(*cursor.fetchall()))
+        return top_heap

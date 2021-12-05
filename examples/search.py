@@ -27,11 +27,15 @@ def main(config: PostgresConfig):
         dlens_table=config.dlens_table,
         dlens_docid_col=config.dlens_docid_col,
         dlens_len_col=config.dlens_len_col,
+        src_table=config.src_table,
+        src_docid_col=config.src_docid_col,
+        src_doc_col=config.src_doc_col,
         encoding=config.encoding,
         clean=True
     )
     top_list = iindex.search(
-        query="Ректор СПбГУ"
+        query="Ректор СПбГУ",
+        col_to_return=config.search_col
     )
     print(top_list)
 
