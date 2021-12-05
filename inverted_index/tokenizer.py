@@ -7,10 +7,12 @@ from tqdm import tqdm
 
 
 class Tokenizer:
-    def __init__(self):
+    def __init__(self, use_stop_words: bool = False):
         self.stemmer = Mystem()
-        with open('stop_words.txt') as f:
-            self.stop_words = f.read().split('\n')
+        self.stop_words = []
+        if use_stop_words:
+            with open('stop_words.txt') as f:
+                self.stop_words = f.read().split('\n')
 
     def _chunkify(self, iterable: Iterable[Any], chunk_size: int):
         it = iter(iterable)
@@ -90,35 +92,6 @@ class Tokenizer:
                 text = []
 
         return batch_of_lemmas
-
-    def create_inverted_index(
-        self,
-        texts: Dict[Any, str],
-        clean: bool = True,
-        progress: bool = True
-    ) -> Dict[str, Dict[Any, int]]:
-        """
-        Dummy creation of inverted index using dictionaries
-        
-        """
-
-        inverted_index = {}
-        if progress:
-            iterator = tqdm(texts.items())
-        else:
-            iterator = texts.items()
-
-        for text_id, text in iterator:
-            for word in self.lemmatize_step(text, clean):
-                if word in inverted_index.keys():
-                    if text_id in inverted_index[word].keys():
-                        inverted_index[word][text_id] += 1
-                    else:
-                        inverted_index[word][text_id] = 1
-                else:
-                    inverted_index[word] = {text_id: 1}
-        
-        return inverted_index
 
 
 if __name__ == "__main__":

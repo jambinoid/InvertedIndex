@@ -1,1 +1,5 @@
-__pycache__
+**/__pycache__
+test/tmp
+dist
+build
+inverted_index.egg-info
