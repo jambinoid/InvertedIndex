@@ -25,6 +25,7 @@ def main(config: PostgresConfig):
         dlens_table=config.dlens_table,
         dlens_docid_col=config.dlens_docid_col,
         dlens_len_col=config.dlens_len_col,
+        encoding=config.encoding,
         clean=True
     )
     iindex.remove(with_additional_tables=True)

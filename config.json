@@ -3,5 +3,8 @@
     "password": "Y4cLblZaaUj",
     "host": "0.0.0.0",
     "port": "5555",
-    "database": "parsed_data"
+    "database": "parsed_data",
+    "iindex_table": "inverted_index_gamma",
+    "dlens_table": "page_lengths_gamma",
+    "encoding": "gamma"
 }
