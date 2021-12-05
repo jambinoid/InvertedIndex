@@ -2,8 +2,6 @@ import argparse
 import json
 
 import dacite
-import psycopg2
-from tqdm import tqdm
 
 from inverted_index import InvertedIndex, PostgresConfig
 
