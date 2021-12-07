@@ -486,7 +486,10 @@ class InvertedIndex:
                 if len(top_heap) > 1:
                     cursor.execute(
                         f"SELECT {self.src_docid_col}, {col_to_return} FROM {self.src_table}\n"
-                        f"WHERE {self.src_docid_col} IN {tuple([doc_id for _, doc_id in top_heap])};"
+                        f"WHERE {self.src_docid_col} IN {tuple([
+                            doc_id for _, doc_id in top_heap
+                            if doc_id != 'url'
+                        ])};"
                     )
                 elif len(top_heap) == 1:
                     cursor.execute(
@@ -497,12 +500,12 @@ class InvertedIndex:
                     return []
                 col_map = dict(cursor.fetchall())
                 top_heap = [
-                    col_map[doc_id] for _, doc_id in sorted(top_heap, key=lambda x: -x[0])
+                    col_map[doc_id] for _, doc_id in sorted(top_heap, key=lambda x: x[0])
                     if doc_id != 'url'
                 ]
         else:
             top_heap = [
-                doc_id for _, doc_id in sorted(top_heap, key=lambda x: -x[0])
+                doc_id for _, doc_id in sorted(top_heap, key=lambda x: x[0])
                 if doc_id != 'url'
             ]
 
