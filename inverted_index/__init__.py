@@ -487,9 +487,17 @@ class InvertedIndex:
         ]
         if col_to_return:
             with self.connection.cursor() as cursor:
-                cursor.execute(
-                    f"SELECT {col_to_return} FROM {self.src_table}\n"
-                    f"WHERE {self.src_docid_col} IN {tuple(top_heap)};"
-                )
+                if len(top_heap) > 1:
+                    cursor.execute(
+                        f"SELECT {col_to_return} FROM {self.src_table}\n"
+                        f"WHERE {self.src_docid_col} IN {tuple(top_heap)};"
+                    )
+                elif len(top_heap) == 1:
+                    cursor.execute(
+                        f"SELECT {col_to_return} FROM {self.src_table}\n"
+                        f"WHERE {self.src_docid_col} = {top_heap[0]};"
+                    )
+                else:
+                    return []
                 return list(*zip(*cursor.fetchall()))
         return top_heap
