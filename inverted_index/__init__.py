@@ -184,7 +184,7 @@ class InvertedIndex:
                 raise Exception(f"Table {self.iindex_table} already exists")
 
             # Get parsed data from the database table
-            print("Readig data")
+            print("Reading data")
             cursor.execute(f"SELECT {self.src_docid_col}, {self.src_doc_col} FROM {self.src_table};")
             docs = cursor.fetchall()
             inverted_index, docs_lens = self._create_dict(
