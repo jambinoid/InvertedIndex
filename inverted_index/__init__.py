@@ -51,7 +51,7 @@ class PostgresConfig:
     src_doc_col: Optional[str] = field(
         default="parsed_data", init=False)
     encoding: Optional[str] = field(
-        default=None, init=False),
+        default=None, init=False)
     search_col: Optional[str] = field(
         default="url", init=False)
 
