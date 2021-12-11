@@ -481,32 +481,26 @@ class InvertedIndex:
             cursor.close()
         
         # Get sorted by scores list of top documents ids
+        top_heap = [
+            doc_id for _, doc_id in sorted(top_heap, key=lambda x: x[0])
+            if doc_id != 'url'
+        ]
         if col_to_return:
             with self.connection.cursor() as cursor:
                 if len(top_heap) > 1:
                     cursor.execute(
                         f"SELECT {self.src_docid_col}, {col_to_return} FROM {self.src_table}\n"
-                        f"WHERE {self.src_docid_col} IN {tuple([
-                            doc_id for _, doc_id in top_heap
-                            if doc_id != 'url'
-                        ])};"
+                        f"WHERE {self.src_docid_col} IN {tuple(top_heap)};"
                     )
+                    col_map = dict(cursor.fetchall())
+                    top_heap = [col_map[doc_id] for doc_id in top_heap]
                 elif len(top_heap) == 1:
                     cursor.execute(
-                        f"SELECT {self.src_docid_col}, {col_to_return} FROM {self.src_table}\n"
+                        f"SELECT {col_to_return} FROM {self.src_table}\n"
                         f"WHERE {self.src_docid_col} = {top_heap[0][1]});", 
                     )
+                    top_heap = cursor.fetchone()
                 else:
                     return []
-                col_map = dict(cursor.fetchall())
-                top_heap = [
-                    col_map[doc_id] for _, doc_id in sorted(top_heap, key=lambda x: x[0])
-                    if doc_id != 'url'
-                ]
-        else:
-            top_heap = [
-                doc_id for _, doc_id in sorted(top_heap, key=lambda x: x[0])
-                if doc_id != 'url'
-            ]
 
         return top_heap
