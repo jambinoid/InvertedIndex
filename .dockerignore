@@ -1,0 +1,6 @@
+.git
+__pycache__
+build
+dist
+inverted_index/__pycache__
+inverted_index.egg-info
